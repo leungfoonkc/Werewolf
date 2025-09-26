@@ -89,11 +89,11 @@
              justify-content: center;
         }
 
-        /* 將玩家標記為狼坑時，整個方塊變紅色 */
+        /* 將玩家標記為狼人時，整個方塊變紅色 */
         .player-card.is-wolf-slot {
             background-color: #450a0a;
         }
-        /* 將玩家標記為明好人時，整個方塊變綠色 */
+        /* 將玩家標記為好人時，整個方塊變綠色 */
         .player-card.is-good-person {
             background-color: #064e3b;
         }
@@ -221,8 +221,8 @@
                 '平民': { name: '平民' },
                 '金水': { name: '金水' },
                 '銀水': { name: '銀水' },
-                '明好人': { name: '明好人', isGoodPerson: true },
-                '狼坑': { name: '狼坑', isWolfSlot: true },
+                '好人': { name: '好人', isGoodPerson: true },
+                '狼人': { name: '狼人', isWolfSlot: true },
             };
             
             const tagLayout = [
@@ -296,7 +296,7 @@
                     card.dataset.playerId = player.id;
                     
                     const tagsHTML = player.tags
-                        .filter(tagId => tagId !== '明好人' && tagId !== '狼坑') 
+                        .filter(tagId => tagId !== '好人' && tagId !== '狼人') 
                         .map(tagId => tagDefinitions[tagId] ? `<span class="tag">${tagId}</span>` : '')
                         .join('');
 
@@ -452,8 +452,8 @@
 
                 modalTitle.textContent = `標記 ${playerId} 號玩家`;
                 
-                const isGoodPerson = player.tags.includes('明好人');
-                const isWolfSlot = player.tags.includes('狼坑');
+                const isGoodPerson = player.tags.includes('好人');
+                const isWolfSlot = player.tags.includes('狼人');
 
                 // Top row buttons
                 modalOptions.innerHTML = `
@@ -465,10 +465,10 @@
                         ☀️
                         </button>
                         <button id="set-good-person-btn" class="w-1/4 py-2 px-2 rounded-lg text-white font-semibold ${isGoodPerson ? 'bg-green-700 selected' : 'bg-gray-600'}">
-                        明好人
+                        好人
                         </button>
                         <button id="set-wolf-slot-btn" class="w-1/4 py-2 px-2 rounded-lg text-white font-semibold ${isWolfSlot ? 'bg-red-800 selected' : 'bg-gray-600'}">
-                        狼坑
+                        狼人
                         </button>
                     </div>`;
                 
@@ -664,7 +664,7 @@
                 // "Good Person" button listener
                 const setGoodPersonBtn = e.target.closest('#set-good-person-btn');
                 if (setGoodPersonBtn) {
-                    const tagId = '明好人';
+                    const tagId = '好人';
                     if (player.tags.includes(tagId)) {
                         player.tags = player.tags.filter(t => t !== tagId);
                     } else {
@@ -681,7 +681,7 @@
                 // "Wolf Slot" button listener
                 const setWolfSlotBtn = e.target.closest('#set-wolf-slot-btn');
                 if (setWolfSlotBtn) {
-                    const tagId = '狼坑';
+                    const tagId = '狼人';
                     if (player.tags.includes(tagId)) {
                         player.tags = player.tags.filter(t => t !== tagId);
                     } else {
