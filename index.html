@@ -116,20 +116,20 @@
     <div id="app" class="h-full flex flex-col p-2 max-w-md mx-auto">
 
         <!-- 頂部標題和按鈕 -->
-        <header class="flex justify-end items-center mb-2 px-2">
+        <header class="flex justify-end items-center mb-2 px-2 flex-shrink-0">
             <div class="space-x-1 flex items-center">
                 <button id="sheriff-btn" class="text-xs bg-blue-800 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg">警長選舉</button>
                 <button id="tie-breaker-btn" class="text-xs bg-purple-800 hover:bg-purple-700 text-white font-bold py-2 px-3 rounded-lg">平票PK</button>
                 <button id="reset-btn" class="bg-red-800 hover:bg-red-700 text-white font-bold p-2 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 18"/><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1-6.74-2.74L21 6"/><path d="M3 6h6v6"/><path d="M21 18h-6v-6"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                 </button>
             </div>
         </header>
 
         <!-- 警長選舉資訊顯示區 -->
-        <section id="sheriff-display" class="text-xs px-2 mb-2 text-gray-300 space-y-1"></section>
+        <section id="sheriff-display" class="text-xs px-2 mb-2 text-gray-300 space-y-1 flex-shrink-0"></section>
         <!-- 平票PK資訊顯示區 -->
-        <section id="tie-breaker-display" class="text-xs px-2 mb-2 text-gray-300 space-y-1"></section>
+        <section id="tie-breaker-display" class="text-xs px-2 mb-2 text-gray-300 space-y-1 flex-shrink-0"></section>
 
         <!-- 玩家格仔佈局 -->
         <main id="players-grid" class="flex gap-2 flex-grow">
@@ -179,6 +179,16 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const app = document.getElementById('app');
+
+            // --- Viewport Height Fix ---
+            function setAppHeight() {
+                app.style.height = `${window.innerHeight}px`;
+            }
+            // Set height on initial load and on resize
+            setAppHeight();
+            window.addEventListener('resize', setAppHeight);
+
             // DOM element selections
             const leftColumn = document.getElementById('left-column');
             const rightColumn = document.getElementById('right-column');
@@ -204,57 +214,33 @@
             const resetTieBreakerBtn = document.getElementById('reset-tie-breaker-btn');
             const tieBreakerDisplay = document.getElementById('tie-breaker-display');
 
-
             let gameState = {};
             let currentEditingPlayerId = null;
 
             // Tags configuration
             const tagDefinitions = {
-                '狼': { name: '狼' },
-                '大狼': { name: '大狼' },
-                '其他狼': { name: '其他狼' },
-                '預言家': { name: '預言家' },
-                '女巫': { name: '女巫' },
-                '獵人': { name: '獵人' },
-                '神牌': { name: '神牌' },
-                '偏好': { name: '偏好' },
-                '平民': { name: '平民' },
-                '金水': { name: '金水' },
-                '銀水': { name: '銀水' },
-                '好人': { name: '好人', isGoodPerson: true },
-                '狼人': { name: '狼人', isWolfSlot: true },
+                '狼': { name: '狼' }, '大狼': { name: '大狼' }, '其他狼': { name: '其他狼' },
+                '預言家': { name: '預言家' }, '女巫': { name: '女巫' }, '獵人': { name: '獵人' }, '神牌': { name: '神牌' },
+                '偏好': { name: '偏好' }, '平民': { name: '平民' }, '金水': { name: '金水' }, '銀水': { name: '銀水' },
+                '好人': { name: '好人', isGoodPerson: true }, '狼人': { name: '狼人', isWolfSlot: true },
             };
-            
             const tagLayout = [
-                ['狼', '大狼', '其他狼'],
-                ['預言家', '女巫', '獵人', '神牌'],
-                ['偏好', '平民', '金水', '銀水']
+                ['狼', '大狼', '其他狼'], ['預言家', '女巫', '獵人', '神牌'], ['偏好', '平民', '金水', '銀水']
             ];
 
-
-            // Initialize or load data from localStorage
             function initialize() {
                 const savedData = localStorage.getItem('werewolfNotepadState');
                 if (savedData) {
                     gameState = JSON.parse(savedData);
-                    // Backward compatibility and data integrity checks
                     if (!gameState.sheriff) gameState.sheriff = { running: [], votes: {} };
                     if (!gameState.sheriffTieBreaker) gameState.sheriffTieBreaker = { tiedPlayers: [], votes: {} };
-                    
                     gameState.players.forEach(p => {
-                        if(p.isMe === undefined) p.isMe = false;
-                        if(p.isStarred === undefined) p.isStarred = false;
+                        if (p.isMe === undefined) p.isMe = false;
+                        if (p.isStarred === undefined) p.isStarred = false;
                     });
-
                 } else {
                     gameState = {
-                        players: Array.from({ length: 12 }, (_, i) => ({
-                            id: i + 1,
-                            status: 'alive',
-                            tags: [],
-                            isMe: false,
-                            isStarred: false
-                        })),
+                        players: Array.from({ length: 12 }, (_, i) => ({ id: i + 1, status: 'alive', tags: [], isMe: false, isStarred: false })),
                         sheriff: { running: [], votes: {} },
                         sheriffTieBreaker: { tiedPlayers: [], votes: {} },
                     };
@@ -262,255 +248,167 @@
                 render();
             }
 
-            // Save data to localStorage
             function saveData() {
                 localStorage.setItem('werewolfNotepadState', JSON.stringify(gameState));
             }
 
-            // Render all UI components
             function render() {
                 renderPlayers();
                 renderSheriffInfo();
                 renderTieBreakerInfo();
             }
-            
-            // Render player grid
+
             function renderPlayers() {
                 leftColumn.innerHTML = '';
                 rightColumn.innerHTML = '';
-
                 gameState.players.forEach(player => {
-                    const isWolfSlot = player.tags.some(tagId => tagDefinitions[tagId] && tagDefinitions[tagId].isWolfSlot);
-                    const isGoodPerson = player.tags.some(tagId => tagDefinitions[tagId] && tagDefinitions[tagId].isGoodPerson);
-                    const isMe = player.isMe;
-                    const isStarred = player.isStarred;
-
+                    const isWolfSlot = player.tags.includes('狼人');
+                    const isGoodPerson = player.tags.includes('好人');
                     const card = document.createElement('div');
-                    let cardClasses = `player-card bg-gray-800 rounded-lg p-2 flex flex-col justify-between items-center cursor-pointer ${player.status === 'eliminated' ? 'eliminated' : ''}`;
-                    if (isWolfSlot) {
-                        cardClasses += ' is-wolf-slot';
-                    } else if (isGoodPerson) {
-                        cardClasses += ' is-good-person';
-                    }
+                    let cardClasses = `player-card bg-gray-800 rounded-lg p-2 flex flex-col justify-between items-center ${player.status === 'eliminated' ? 'eliminated' : ''}`;
+                    if (isWolfSlot) cardClasses += ' is-wolf-slot';
+                    else if (isGoodPerson) cardClasses += ' is-good-person';
                     card.className = cardClasses;
                     card.dataset.playerId = player.id;
-                    
-                    const tagsHTML = player.tags
-                        .filter(tagId => tagId !== '好人' && tagId !== '狼人') 
-                        .map(tagId => tagDefinitions[tagId] ? `<span class="tag">${tagId}</span>` : '')
-                        .join('');
-
-                    const isLeftColumnPlayer = player.id <= 6;
-                    const emojiPositionClass = isLeftColumnPlayer ? 'bottom-1 left-1' : 'bottom-1 right-1';
-                    const meEmojiHTML = isMe ? `<span class="absolute ${emojiPositionClass} text-xl z-10">🙎🏻‍♂️</span>` : '';
-                    const starHTML = isStarred ? `<span class="absolute top-0 -right-4 text-lg z-10">☀️</span>` : '';
-
-
+                    const tagsHTML = player.tags.filter(t => t !== '好人' && t !== '狼人').map(t => tagDefinitions[t] ? `<span class="tag">${t}</span>` : '').join('');
+                    const isLeft = player.id <= 6;
+                    const meEmojiHTML = player.isMe ? `<span class="absolute ${isLeft ? 'bottom-1 left-1' : 'bottom-1 right-1'} text-xl z-10">🙎🏻‍♂️</span>` : '';
+                    const starHTML = player.isStarred ? `<span class="absolute top-0 -right-4 text-lg z-10">☀️</span>` : '';
                     card.innerHTML = `
                         <button class="reset-player-btn absolute top-1 left-1 text-gray-500 hover:text-white z-10 p-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1-6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                         </button>
                         <button class="eliminate-btn absolute top-1 right-1 text-gray-500 hover:text-white z-10 p-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                         </button>
-                        <div class="player-number-wrapper inline-block relative">
-                            <div class="player-number text-5xl font-bold">${player.id}</div>
+                        <div class="player-number-wrapper relative">
+                            <div class="player-number text-4xl font-bold">${player.id}</div>
                             ${starHTML}
                         </div>
-                        <div class="tags-container flex flex-wrap justify-center min-h-[24px]">${tagsHTML}</div>
+                        <div class="tags-container flex flex-wrap justify-center min-h-[24px] mt-1">${tagsHTML}</div>
                         ${meEmojiHTML}
                     `;
-                    
-                    if (isLeftColumnPlayer) {
-                        leftColumn.appendChild(card);
-                    } else {
-                        rightColumn.appendChild(card);
-                    }
+                    if (isLeft) leftColumn.appendChild(card);
+                    else rightColumn.appendChild(card);
                 });
             }
-            
-            // Render sheriff election info
+
             function renderSheriffInfo() {
                 const { running, votes } = gameState.sheriff;
-                // If no one is running, don't display anything.
-                if (running.length === 0) {
-                    sheriffDisplay.innerHTML = '';
-                    return;
+                if (running.length === 0 && Object.keys(votes).length === 0) {
+                    sheriffDisplay.innerHTML = ''; return;
                 }
-
                 const notRunning = gameState.players.map(p => p.id).filter(id => !running.includes(id));
-                
-                const runningText = `<div><span class="font-semibold">警上：</span>${running.join(' ')}</div>`;
+                const runningText = running.length > 0 ? `<div><span class="font-semibold">警上：</span>${running.join(' ')}</div>` : '';
                 const notRunningText = notRunning.length > 0 ? `<div><span class="font-semibold">警下：</span>${notRunning.join(' ')}</div>` : '';
-
                 const votesByCandidate = {};
-                // Iterate over all possible voters (警下) to determine their vote or abstention
                 notRunning.forEach(voterId => {
                     const votedFor = votes[voterId];
-                    const candidate = votedFor ? votedFor : 'abstain'; // If no vote recorded, it's an abstention
-                    
-                    if (!votesByCandidate[candidate]) {
-                        votesByCandidate[candidate] = [];
-                    }
+                    const candidate = votedFor ? votedFor : 'abstain';
+                    if (!votesByCandidate[candidate]) votesByCandidate[candidate] = [];
                     votesByCandidate[candidate].push(String(voterId));
                 });
-
                 let votesText = '';
                 if (notRunning.length > 0) {
                     votesText += '<div><span class="font-semibold">投票：</span>';
-                    
                     const voteStrings = [];
                     const sortedCandidates = Object.keys(votesByCandidate).sort((a, b) => {
-                        if (a === 'abstain') return 1;
-                        if (b === 'abstain') return -1;
+                        if (a === 'abstain') return 1; if (b === 'abstain') return -1;
                         return parseInt(a) - parseInt(b);
                     });
-
                     sortedCandidates.forEach(candidate => {
                         const voters = votesByCandidate[candidate];
                         if (voters && voters.length > 0) {
                             const sortedVoters = voters.sort((a,b) => parseInt(a) - parseInt(b)).join(' ');
-                            if (candidate === 'abstain') {
-                                voteStrings.push(`${sortedVoters} 棄票`);
-                            } else {
-                                voteStrings.push(`${sortedVoters} 投 ${candidate}`);
-                            }
+                            if (candidate === 'abstain') voteStrings.push(`${sortedVoters} 棄票`);
+                            else voteStrings.push(`${sortedVoters} 投 ${candidate}`);
                         }
                     });
-
                     votesText += voteStrings.join('； ');
                     votesText += '</div>';
                 }
-
                 sheriffDisplay.innerHTML = runningText + notRunningText + votesText;
             }
 
-            // Render tie-breaker info
             function renderTieBreakerInfo() {
                 const { tiedPlayers, votes } = gameState.sheriffTieBreaker;
                 if (tiedPlayers.length === 0) {
-                    tieBreakerDisplay.innerHTML = '';
-                    return;
+                    tieBreakerDisplay.innerHTML = ''; return;
                 }
-
                 let html = '<div class="border-t border-gray-700 mt-2 pt-2">';
                 html += `<div><span class="font-semibold text-purple-400">平票PK玩家：</span>${tiedPlayers.join(' ')}</div>`;
-                
                 const votesByCandidate = {};
                 Object.entries(votes).forEach(([voter, candidate]) => {
                     if (candidate) {
-                        if (!votesByCandidate[candidate]) {
-                            votesByCandidate[candidate] = [];
-                        }
+                        if (!votesByCandidate[candidate]) votesByCandidate[candidate] = [];
                         votesByCandidate[candidate].push(voter);
                     }
                 });
-
-                const allPossibleVoters = gameState.players
-                    .filter(p => !tiedPlayers.includes(p.id))
-                    .map(p => p.id);
+                const allPossibleVoters = gameState.players.filter(p => !tiedPlayers.includes(p.id)).map(p => p.id);
                 const actualVoters = Object.keys(votes).map(v => parseInt(v));
                 const abstainers = allPossibleVoters.filter(voterId => !actualVoters.includes(voterId));
-
                 if (actualVoters.length > 0 || abstainers.length > 0) {
                     html += `<div><span class="font-semibold text-purple-400">PK投票：</span>`;
-                    
                     const voteStrings = [];
-                    
                     Object.entries(votesByCandidate).forEach(([candidate, voters]) => {
                         voteStrings.push(`${voters.sort((a,b) => a-b).join(' ')} 投 ${candidate}`);
                     });
-
                     if (abstainers.length > 0) {
                         voteStrings.push(`${abstainers.sort((a,b) => a-b).join(' ')} 棄票`);
                     }
-
                     html += voteStrings.join('； ');
                     html += `</div>`;
                 }
-                
                 html += '</div>';
                 tieBreakerDisplay.innerHTML = html;
             }
 
-            // Generic modal open/close functions
             function openGenericModal(modalElement) {
                 modalElement.classList.remove('hidden');
                 setTimeout(() => modalElement.classList.remove('modal-closed'), 10);
             }
-
             function closeGenericModal(modalElement) {
                 modalElement.classList.add('modal-closed');
                 setTimeout(() => modalElement.classList.add('hidden'), 200);
             }
 
-            // Open player tagging modal
             function openTagModal(playerId) {
                 currentEditingPlayerId = playerId;
-                const player = gameState.players.find(p => p.id === currentEditingPlayerId);
+                const player = gameState.players.find(p => p.id === playerId);
                 if (!player) return;
-
                 modalTitle.textContent = `標記 ${playerId} 號玩家`;
-                
-                const isGoodPerson = player.tags.includes('好人');
-                const isWolfSlot = player.tags.includes('狼人');
-
-                // Top row buttons
                 modalOptions.innerHTML = `
                     <div class="flex space-x-2 mb-4 border-b border-gray-700 pb-3">
-                        <button id="set-me-btn" class="w-1/4 py-2 px-2 rounded-lg text-white font-semibold text-2xl ${player.isMe ? 'bg-green-600 selected' : 'bg-gray-600'}">
-                        🙎🏻‍♂️
-                        </button>
-                        <button id="set-star-btn" class="w-1/4 py-2 px-2 rounded-lg text-white font-semibold text-2xl ${player.isStarred ? 'bg-yellow-600 selected' : 'bg-gray-600'}">
-                        ☀️
-                        </button>
-                        <button id="set-good-person-btn" class="w-1/4 py-2 px-2 rounded-lg text-white font-semibold ${isGoodPerson ? 'bg-green-700 selected' : 'bg-gray-600'}">
-                        好人
-                        </button>
-                        <button id="set-wolf-slot-btn" class="w-1/4 py-2 px-2 rounded-lg text-white font-semibold ${isWolfSlot ? 'bg-red-800 selected' : 'bg-gray-600'}">
-                        狼人
-                        </button>
+                        <button id="set-me-btn" class="w-1/4 py-2 px-2 rounded-lg text-white font-semibold text-2xl ${player.isMe ? 'bg-green-600 selected' : 'bg-gray-600'}">🙎🏻‍♂️</button>
+                        <button id="set-star-btn" class="w-1/4 py-2 px-2 rounded-lg text-white font-semibold text-2xl ${player.isStarred ? 'bg-yellow-600 selected' : 'bg-gray-600'}">☀️</button>
+                        <button id="set-good-person-btn" class="w-1/4 py-2 px-2 rounded-lg text-white font-semibold ${player.tags.includes('好人') ? 'bg-green-700 selected' : 'bg-gray-600'}">好人</button>
+                        <button id="set-wolf-slot-btn" class="w-1/4 py-2 px-2 rounded-lg text-white font-semibold ${player.tags.includes('狼人') ? 'bg-red-800 selected' : 'bg-gray-600'}">狼人</button>
                     </div>`;
-                
-                // Render tags in rows
-                tagsOptions.innerHTML = '';
-                tagLayout.forEach(row => {
-                    const rowDiv = document.createElement('div');
-                    rowDiv.className = "flex flex-wrap justify-center gap-2";
-                    row.forEach(tagId => {
-                        const tag = tagDefinitions[tagId];
-                        const button = document.createElement('button');
-                        button.className = `tag-btn bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-3 rounded-lg text-sm flex-grow ${player.tags.includes(tagId) ? 'selected' : ''}`;
-                        button.textContent = tag.name;
-                        button.dataset.tagId = tagId;
-                        rowDiv.appendChild(button);
-                    });
-                    tagsOptions.appendChild(rowDiv);
-                });
-                
+                tagsOptions.innerHTML = tagLayout.map(row => `
+                    <div class="flex flex-wrap justify-center gap-2">
+                        ${row.map(tagId => `
+                            <button class="tag-btn bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-3 rounded-lg text-sm flex-grow ${player.tags.includes(tagId) ? 'selected' : ''}" data-tag-id="${tagId}">
+                                ${tagDefinitions[tagId].name}
+                            </button>
+                        `).join('')}
+                    </div>`).join('');
                 openGenericModal(modal);
             }
             
-            // Open sheriff election modal
             function openSheriffModal() {
                 renderSheriffModalContent();
                 openGenericModal(sheriffModal);
             }
-            
-            // Open tie-breaker modal
             function openTieBreakerModal() {
                 renderTieBreakerModalContent();
                 openGenericModal(tieBreakerModal);
             }
 
-            // Render sheriff election modal content
             function renderSheriffModalContent() {
                 sheriffOptions.innerHTML = '';
                 const { running } = gameState.sheriff;
-
-                // Section for players running for sheriff
                 const runningSection = document.createElement('div');
-                runningSection.innerHTML = `<h3 class="text-md font-bold text-yellow-400 mb-2 border-b border-gray-600 pb-1">警上玩家 (點擊加入/移除)</h3>`;
+                runningSection.innerHTML = `<h3 class="text-md font-bold text-yellow-400 mb-2 border-b border-gray-600 pb-1">警上玩家</h3>`;
                 const runningGrid = document.createElement('div');
                 runningGrid.className = 'grid grid-cols-4 gap-2 mb-4';
                 gameState.players.forEach(p => {
@@ -522,8 +420,6 @@
                 });
                 runningSection.appendChild(runningGrid);
                 sheriffOptions.appendChild(runningSection);
-
-                // Section for voting
                 const notRunningPlayers = gameState.players.filter(p => !running.includes(p.id));
                 if (notRunningPlayers.length > 0) {
                     const votingSection = document.createElement('div');
@@ -537,14 +433,11 @@
                         const select = document.createElement('select');
                         select.className = 'vote-select';
                         select.dataset.voterId = p.id;
-                        
-                        // Options
                         select.innerHTML = `<option value="">未投票</option>`;
                         running.forEach(candidateId => {
                            select.innerHTML += `<option value="${candidateId}" ${gameState.sheriff.votes[p.id] == candidateId ? 'selected' : ''}>投 ${candidateId} 號</option>`;
                         });
                         select.innerHTML += `<option value="abstain" ${gameState.sheriff.votes[p.id] === 'abstain' ? 'selected' : ''}>棄票</option>`;
-                        
                         voteItem.appendChild(select);
                         votingList.appendChild(voteItem);
                     });
@@ -553,14 +446,11 @@
                 }
             }
             
-            // Render tie-breaker modal content (New UI)
             function renderTieBreakerModalContent() {
                 tieBreakerOptions.innerHTML = '';
                 const { tiedPlayers, votes } = gameState.sheriffTieBreaker;
-
-                // Section for tied players
                 const tiedSection = document.createElement('div');
-                tiedSection.innerHTML = `<h3 class="text-md font-bold text-purple-400 mb-2 border-b border-gray-600 pb-1">PK玩家 (點擊加入/移除)</h3>`;
+                tiedSection.innerHTML = `<h3 class="text-md font-bold text-purple-400 mb-2 border-b border-gray-600 pb-1">PK玩家</h3>`;
                 const tiedGrid = document.createElement('div');
                 tiedGrid.className = 'grid grid-cols-4 gap-2 mb-4';
                 gameState.players.forEach(p => {
@@ -572,20 +462,15 @@
                 });
                 tiedSection.appendChild(tiedGrid);
                 tieBreakerOptions.appendChild(tiedSection);
-
-                // Section for PK voting
                 const voters = gameState.players.filter(p => !tiedPlayers.includes(p.id));
                 if (voters.length > 0 && tiedPlayers.length > 0) {
                     const votingContainer = document.createElement('div');
-                    
                     tiedPlayers.forEach(candidateId => {
                         const candidateSection = document.createElement('div');
                         candidateSection.className = 'mb-4';
                         candidateSection.innerHTML = `<h3 class="text-md font-bold text-blue-400 mb-2 border-b border-gray-600 pb-1">投票給 ${candidateId} 號</h3>`;
-                        
                         const votersGrid = document.createElement('div');
                         votersGrid.className = 'grid grid-cols-5 gap-2';
-
                         voters.forEach(voter => {
                             const btn = document.createElement('button');
                             const isSelected = votes[voter.id] === candidateId;
@@ -595,285 +480,144 @@
                             btn.dataset.candidateId = candidateId;
                             votersGrid.appendChild(btn);
                         });
-
                         candidateSection.appendChild(votersGrid);
                         votingContainer.appendChild(candidateSection);
                     });
-                    
                     tieBreakerOptions.appendChild(votingContainer);
                 }
             }
 
-
             // Event Listeners
-            document.getElementById('players-grid').addEventListener('click', (e) => {
+            document.getElementById('players-grid').addEventListener('click', e => {
                 const card = e.target.closest('.player-card');
                 if (!card) return;
                 const playerId = parseInt(card.dataset.playerId);
-
                 if (e.target.closest('.reset-player-btn')) {
                     const player = gameState.players.find(p => p.id === playerId);
                     if (player) {
-                        player.tags = [];
-                        player.status = 'alive';
-                        player.isMe = false;
-                        player.isStarred = false;
-                        saveData();
-                        render();
+                        player.tags = []; player.status = 'alive'; player.isMe = false; player.isStarred = false;
+                        saveData(); render();
                     }
-                    return;
-                }
-                if (e.target.closest('.eliminate-btn')) {
+                } else if (e.target.closest('.eliminate-btn')) {
                     const player = gameState.players.find(p => p.id === playerId);
                     if (player) {
                         player.status = player.status === 'alive' ? 'eliminated' : 'alive';
-                        saveData();
-                        render();
+                        saveData(); render();
                     }
-                    return;
+                } else {
+                    openTagModal(playerId);
                 }
-                openTagModal(playerId);
             });
             
-            modal.addEventListener('click', (e) => {
+            function toggleTag(tagId, player) {
+                const index = player.tags.indexOf(tagId);
+                if (index > -1) player.tags.splice(index, 1);
+                else player.tags.push(tagId);
+            }
+            modal.addEventListener('click', e => {
                 const player = gameState.players.find(p => p.id === currentEditingPlayerId);
                 if (!player) return;
-
-                // "Me" button listener
-                const setMeBtn = e.target.closest('#set-me-btn');
-                if (setMeBtn) {
-                    player.isMe = !player.isMe;
-                    setMeBtn.classList.toggle('selected', player.isMe);
-                    setMeBtn.classList.toggle('bg-green-600', player.isMe);
-                    setMeBtn.classList.toggle('bg-gray-600', !player.isMe);
-                    saveData();
-                    return;
+                const button = e.target.closest('button');
+                if (!button) return;
+                let shouldSave = true;
+                const tagId = button.dataset.tagId;
+                switch (button.id) {
+                    case 'set-me-btn': player.isMe = !player.isMe; break;
+                    case 'set-star-btn': player.isStarred = !player.isStarred; break;
+                    case 'set-good-person-btn': toggleTag('好人', player); break;
+                    case 'set-wolf-slot-btn': toggleTag('狼人', player); break;
+                    default:
+                        if (tagId) toggleTag(tagId, player);
+                        else shouldSave = false;
                 }
-                
-                // "Star" button listener
-                const setStarBtn = e.target.closest('#set-star-btn');
-                if (setStarBtn) {
-                    player.isStarred = !player.isStarred;
-                    setStarBtn.classList.toggle('selected', player.isStarred);
-                    setStarBtn.classList.toggle('bg-yellow-600', player.isStarred);
-                    setStarBtn.classList.toggle('bg-gray-600', !player.isStarred);
+                if (shouldSave) {
                     saveData();
-                    return;
-                }
-
-                // "Good Person" button listener
-                const setGoodPersonBtn = e.target.closest('#set-good-person-btn');
-                if (setGoodPersonBtn) {
-                    const tagId = '好人';
-                    if (player.tags.includes(tagId)) {
-                        player.tags = player.tags.filter(t => t !== tagId);
-                    } else {
-                        player.tags.push(tagId);
-                    }
-                    const isGoodPerson = player.tags.includes(tagId);
-                    setGoodPersonBtn.classList.toggle('selected', isGoodPerson);
-                    setGoodPersonBtn.classList.toggle('bg-green-700', isGoodPerson);
-                    setGoodPersonBtn.classList.toggle('bg-gray-600', !isGoodPerson);
-                    saveData();
-                    return;
-                }
-                
-                // "Wolf Slot" button listener
-                const setWolfSlotBtn = e.target.closest('#set-wolf-slot-btn');
-                if (setWolfSlotBtn) {
-                    const tagId = '狼人';
-                    if (player.tags.includes(tagId)) {
-                        player.tags = player.tags.filter(t => t !== tagId);
-                    } else {
-                        player.tags.push(tagId);
-                    }
-                    const isWolfSlot = player.tags.includes(tagId);
-                    setWolfSlotBtn.classList.toggle('selected', isWolfSlot);
-                    setWolfSlotBtn.classList.toggle('bg-red-800', isWolfSlot);
-                    setWolfSlotBtn.classList.toggle('bg-gray-600', !isWolfSlot);
-                    saveData();
-                    return;
-                }
-
-
-                // Tag button listener
-                const button = e.target.closest('.tag-btn');
-                if (button) {
-                    const tagId = button.dataset.tagId;
-                    if (player.tags.includes(tagId)) {
-                        player.tags = player.tags.filter(t => t !== tagId);
-                        button.classList.remove('selected');
-                    } else {
-                        player.tags.push(tagId);
-                        button.classList.add('selected');
-                    }
-                    saveData();
+                    openTagModal(currentEditingPlayerId);
                 }
             });
 
-
-            // Sheriff Modal Events
-            sheriffOptions.addEventListener('click', (e) => {
+            // Sheriff & PK Modal Events
+            sheriffBtn.addEventListener('click', openSheriffModal);
+            closeSheriffModalBtn.addEventListener('click', () => { saveData(); render(); closeGenericModal(sheriffModal); });
+            sheriffModalBackdrop.addEventListener('click', () => { saveData(); render(); closeGenericModal(sheriffModal); });
+            resetSheriffBtn.addEventListener('click', () => {
+                gameState.sheriff = { running: [], votes: {} };
+                gameState.sheriffTieBreaker = { tiedPlayers: [], votes: {} };
+                renderSheriffModalContent();
+            });
+            sheriffOptions.addEventListener('click', e => {
                 const btn = e.target.closest('.sheriff-player-btn');
                 if (!btn) return;
                 const playerId = parseInt(btn.dataset.playerId);
                 const running = gameState.sheriff.running;
-                if (running.includes(playerId)) {
-                    gameState.sheriff.running = running.filter(id => id !== playerId);
-                    Object.keys(gameState.sheriff.votes).forEach(voter => {
-                        if (gameState.sheriff.votes[voter] === playerId) {
-                            delete gameState.sheriff.votes[voter];
-                        }
-                    });
+                const index = running.indexOf(playerId);
+                if (index > -1) {
+                    running.splice(index, 1);
+                    Object.keys(gameState.sheriff.votes).forEach(voter => { if (gameState.sheriff.votes[voter] === playerId) delete gameState.sheriff.votes[voter]; });
                 } else {
-                    running.push(playerId);
-                    running.sort((a, b) => a - b);
+                    running.push(playerId); running.sort((a, b) => a - b);
                 }
                 renderSheriffModalContent();
             });
-
-            sheriffOptions.addEventListener('change', (e) => {
+            sheriffOptions.addEventListener('change', e => {
                 const select = e.target.closest('.vote-select');
                 if (!select) return;
                 const voterId = select.dataset.voterId;
                 const candidate = select.value;
-                if (candidate) {
-                    gameState.sheriff.votes[voterId] = candidate === 'abstain' ? 'abstain' : parseInt(candidate);
-                } else {
-                    delete gameState.sheriff.votes[voterId];
-                }
+                if (candidate) gameState.sheriff.votes[voterId] = candidate === 'abstain' ? 'abstain' : parseInt(candidate);
+                else delete gameState.sheriff.votes[voterId];
             });
-
-            resetSheriffBtn.addEventListener('click', () => {
-                gameState.sheriff.running = [];
-                gameState.sheriff.votes = {};
-                gameState.sheriffTieBreaker = { tiedPlayers: [], votes: {} };
-                renderSheriffModalContent();
-            });
-
-            // Tie-Breaker Modal Events
-             tieBreakerOptions.addEventListener('click', (e) => {
-                // Handle PK player selection
-                const playerBtn = e.target.closest('.sheriff-player-btn');
-                if (playerBtn) {
-                    const playerId = parseInt(playerBtn.dataset.playerId);
-                    const tied = gameState.sheriffTieBreaker.tiedPlayers;
-                    if (tied.includes(playerId)) {
-                        gameState.sheriffTieBreaker.tiedPlayers = tied.filter(id => id !== playerId);
-                        // Clean up votes for the removed candidate
-                        Object.keys(gameState.sheriffTieBreaker.votes).forEach(voter => {
-                            if (gameState.sheriffTieBreaker.votes[voter] === playerId) {
-                                delete gameState.sheriffTieBreaker.votes[voter];
-                            }
-                        });
-                    } else {
-                        tied.push(playerId);
-                        tied.sort((a, b) => a - b);
-                    }
-                    renderTieBreakerModalContent();
-                    return; // Stop further execution
+            tieBreakerBtn.addEventListener('click', () => {
+                const { votes } = gameState.sheriff;
+                const voteCounts = {};
+                Object.values(votes).forEach(c => { if (c && c !== 'abstain') voteCounts[c] = (voteCounts[c] || 0) + 1; });
+                let maxVotes = 0;
+                Object.values(voteCounts).forEach(c => { if (c > maxVotes) maxVotes = c; });
+                const tiedPlayers = [];
+                if (maxVotes > 0) {
+                    Object.keys(voteCounts).forEach(c => { if (voteCounts[c] === maxVotes) tiedPlayers.push(parseInt(c)); });
                 }
-
-                // Handle PK voting
-                const voteBtn = e.target.closest('.vote-btn');
-                if (voteBtn) {
-                    const voterId = parseInt(voteBtn.dataset.voterId);
-                    const candidateId = parseInt(voteBtn.dataset.candidateId);
-                    const currentVote = gameState.sheriffTieBreaker.votes[voterId];
-
-                    if (currentVote === candidateId) {
-                        // Click again to unvote
-                        delete gameState.sheriffTieBreaker.votes[voterId];
-                    } else {
-                        // Vote for this candidate
-                        gameState.sheriffTieBreaker.votes[voterId] = candidateId;
-                    }
-                    renderTieBreakerModalContent(); // Re-render to show selection change
+                if (tiedPlayers.length > 1) {
+                    gameState.sheriffTieBreaker.tiedPlayers = tiedPlayers.sort((a,b) => a-b);
+                    gameState.sheriffTieBreaker.votes = {};
                 }
+                openTieBreakerModal();
             });
-
+            closeTieBreakerBtn.addEventListener('click', () => { saveData(); render(); closeGenericModal(tieBreakerModal); });
+            tieBreakerModalBackdrop.addEventListener('click', () => { saveData(); render(); closeGenericModal(tieBreakerModal); });
             resetTieBreakerBtn.addEventListener('click', () => {
                 gameState.sheriffTieBreaker = { tiedPlayers: [], votes: {} };
                 renderTieBreakerModalContent();
             });
-
-
-            // General Button Events
-            sheriffBtn.addEventListener('click', openSheriffModal);
-            
-            tieBreakerBtn.addEventListener('click', () => {
-                // Auto-detect tied players from the first round of sheriff voting
-                const { votes } = gameState.sheriff;
-                const voteCounts = {};
-                
-                Object.values(votes).forEach(candidate => {
-                    if (candidate && candidate !== 'abstain') {
-                        voteCounts[candidate] = (voteCounts[candidate] || 0) + 1;
+            tieBreakerOptions.addEventListener('click', e => {
+                const playerBtn = e.target.closest('.sheriff-player-btn');
+                if (playerBtn) {
+                    const playerId = parseInt(playerBtn.dataset.playerId);
+                    const tied = gameState.sheriffTieBreaker.tiedPlayers;
+                    const index = tied.indexOf(playerId);
+                    if (index > -1) {
+                        tied.splice(index, 1);
+                        Object.keys(gameState.sheriffTieBreaker.votes).forEach(v => { if(gameState.sheriffTieBreaker.votes[v] === playerId) delete gameState.sheriffTieBreaker.votes[v]; });
+                    } else {
+                        tied.push(playerId); tied.sort((a, b) => a - b);
                     }
-                });
-
-                let maxVotes = 0;
-                Object.values(voteCounts).forEach(count => {
-                    if (count > maxVotes) {
-                        maxVotes = count;
-                    }
-                });
-
-                const tiedPlayers = [];
-                if (maxVotes > 0) {
-                    Object.keys(voteCounts).forEach(candidate => {
-                        if (voteCounts[candidate] === maxVotes) {
-                            tiedPlayers.push(parseInt(candidate));
-                        }
-                    });
+                    renderTieBreakerModalContent();
                 }
-
-                if (tiedPlayers.length > 1) {
-                    gameState.sheriffTieBreaker.tiedPlayers = tiedPlayers.sort((a, b) => a - b);
-                    // Reset previous PK votes when setting new tied players
-                    gameState.sheriffTieBreaker.votes = {};
+                const voteBtn = e.target.closest('.vote-btn');
+                if (voteBtn) {
+                    const voterId = parseInt(voteBtn.dataset.voterId);
+                    const candidateId = parseInt(voteBtn.dataset.candidateId);
+                    const votes = gameState.sheriffTieBreaker.votes;
+                    if (votes[voterId] === candidateId) delete votes[voterId];
+                    else votes[voterId] = candidateId;
+                    renderTieBreakerModalContent();
                 }
-                
-                openTieBreakerModal();
-            });
-
-
-            closeModalBtn.addEventListener('click', () => {
-                render(); // Re-render main grid when closing tag modal
-                closeGenericModal(modal);
-            });
-            modalBackdrop.addEventListener('click', () => {
-                 render(); // Re-render main grid when closing tag modal
-                closeGenericModal(modal);
             });
             
-            closeSheriffModalBtn.addEventListener('click', () => {
-                saveData();
-                render();
-                closeGenericModal(sheriffModal);
-            });
-            sheriffModalBackdrop.addEventListener('click', () => {
-                saveData();
-                render();
-                closeGenericModal(sheriffModal);
-            });
-            
-            closeTieBreakerBtn.addEventListener('click', () => {
-                saveData();
-                render();
-                closeGenericModal(tieBreakerModal);
-            });
-            tieBreakerModalBackdrop.addEventListener('click', () => {
-                saveData();
-                render();
-                closeGenericModal(tieBreakerModal);
-            });
-            
-            resetBtn.addEventListener('click', () => {
-                // The confirm() function is not used because it is not supported in the execution environment.
-                localStorage.removeItem('werewolfNotepadState');
-                initialize();
-            });
+            // General Listeners
+            closeModalBtn.addEventListener('click', () => { render(); closeGenericModal(modal); });
+            modalBackdrop.addEventListener('click', () => { render(); closeGenericModal(modal); });
+            resetBtn.addEventListener('click', () => { localStorage.removeItem('werewolfNotepadState'); initialize(); });
 
             initialize();
         });
