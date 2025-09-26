@@ -22,9 +22,9 @@
             overflow: hidden;
         }
         
-        /* 玩家卡片嘅最小高度，確保喺唔同手機上佈局穩定 */
+        /* 玩家卡片嘅最小高度 */
         .player-card {
-            min-height: 11vh;
+            min-height: 10vh;
             transition: background-color 0.2s ease-in-out;
             position: relative; /* For the cross overlay */
         }
@@ -58,8 +58,8 @@
         }
         
         /* 玩家出局時的樣式 */
-        .player-card.eliminated > * {
-            opacity: 0.6; /* Dim the content inside the card */
+        .player-card.eliminated > .card-content {
+            opacity: 0.6; 
         }
         .player-card.eliminated::before,
         .player-card.eliminated::after {
@@ -80,15 +80,6 @@
              transform: translateY(-50%) rotate(-45deg);
         }
         
-        .player-number-wrapper {
-            position: relative;
-        }
-        .player-number {
-             display: flex;
-             align-items: center;
-             justify-content: center;
-        }
-
         /* 將玩家標記為狼人時，整個方塊變紅色 */
         .player-card.is-wolf-slot {
             background-color: #450a0a;
@@ -265,7 +256,7 @@
                     const isWolfSlot = player.tags.includes('狼人');
                     const isGoodPerson = player.tags.includes('好人');
                     const card = document.createElement('div');
-                    let cardClasses = `player-card bg-gray-800 rounded-lg p-2 flex flex-col justify-between items-center ${player.status === 'eliminated' ? 'eliminated' : ''}`;
+                    let cardClasses = `player-card bg-gray-800 rounded-lg p-2 flex flex-col justify-between ${player.status === 'eliminated' ? 'eliminated' : ''}`;
                     if (isWolfSlot) cardClasses += ' is-wolf-slot';
                     else if (isGoodPerson) cardClasses += ' is-good-person';
                     card.className = cardClasses;
@@ -273,19 +264,23 @@
                     const tagsHTML = player.tags.filter(t => t !== '好人' && t !== '狼人').map(t => tagDefinitions[t] ? `<span class="tag">${t}</span>` : '').join('');
                     const isLeft = player.id <= 6;
                     const meEmojiHTML = player.isMe ? `<span class="absolute ${isLeft ? 'bottom-1 left-1' : 'bottom-1 right-1'} text-xl z-10">🙎🏻‍♂️</span>` : '';
-                    const starHTML = player.isStarred ? `<span class="absolute top-0 -right-4 text-lg z-10">☀️</span>` : '';
+                    const starHTML = player.isStarred ? `<span class="absolute top-0 right-0 text-lg z-10 transform -translate-y-1/4 translate-x-1/4">☀️</span>` : '';
                     card.innerHTML = `
-                        <button class="reset-player-btn absolute top-1 left-1 text-gray-500 hover:text-white z-10 p-1">
-                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                        </button>
-                        <button class="eliminate-btn absolute top-1 right-1 text-gray-500 hover:text-white z-10 p-1">
-                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                        </button>
-                        <div class="player-number-wrapper relative">
-                            <div class="player-number text-4xl font-bold">${player.id}</div>
-                            ${starHTML}
+                        <div class="card-content w-full">
+                            <div class="flex justify-between items-center w-full relative">
+                                <button class="reset-player-btn text-gray-500 hover:text-white z-10 p-1">
+                                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                                </button>
+                                <div class="player-number-wrapper relative">
+                                    <div class="player-number text-4xl font-bold">${player.id}</div>
+                                    ${starHTML}
+                                </div>
+                                <button class="eliminate-btn text-gray-500 hover:text-white z-10 p-1">
+                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                </button>
+                            </div>
+                            <div class="tags-container flex flex-wrap justify-center min-h-[42px] mt-1 items-center">${tagsHTML}</div>
                         </div>
-                        <div class="tags-container flex flex-wrap justify-center min-h-[24px] mt-1">${tagsHTML}</div>
                         ${meEmojiHTML}
                     `;
                     if (isLeft) leftColumn.appendChild(card);
