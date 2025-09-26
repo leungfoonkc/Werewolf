@@ -24,7 +24,7 @@
         
         /* 玩家卡片嘅最小高度 */
         .player-card {
-            min-height: 10vh;
+            min-height: 9.5vh;
             transition: background-color 0.2s ease-in-out;
             position: relative; /* For the cross overlay */
         }
@@ -256,7 +256,7 @@
                     const isWolfSlot = player.tags.includes('狼人');
                     const isGoodPerson = player.tags.includes('好人');
                     const card = document.createElement('div');
-                    let cardClasses = `player-card bg-gray-800 rounded-lg p-2 flex flex-col justify-between ${player.status === 'eliminated' ? 'eliminated' : ''}`;
+                    let cardClasses = `player-card bg-gray-800 rounded-lg p-2 flex flex-col justify-start ${player.status === 'eliminated' ? 'eliminated' : ''}`;
                     if (isWolfSlot) cardClasses += ' is-wolf-slot';
                     else if (isGoodPerson) cardClasses += ' is-good-person';
                     card.className = cardClasses;
@@ -267,7 +267,7 @@
                     const starHTML = player.isStarred ? `<span class="absolute top-0 right-0 text-lg z-10 transform -translate-y-1/4 translate-x-1/4">☀️</span>` : '';
                     card.innerHTML = `
                         <div class="card-content w-full">
-                            <div class="flex justify-between items-center w-full relative">
+                            <div class="flex justify-between items-center w-full relative mb-1">
                                 <button class="reset-player-btn text-gray-500 hover:text-white z-10 p-1">
                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                                 </button>
@@ -279,7 +279,7 @@
                                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                 </button>
                             </div>
-                            <div class="tags-container flex flex-wrap justify-center min-h-[42px] mt-1 items-center">${tagsHTML}</div>
+                            <div class="tags-container flex flex-wrap justify-center min-h-[40px] items-center">${tagsHTML}</div>
                         </div>
                         ${meEmojiHTML}
                     `;
@@ -294,8 +294,11 @@
                     sheriffDisplay.innerHTML = ''; return;
                 }
                 const notRunning = gameState.players.map(p => p.id).filter(id => !running.includes(id));
-                const runningText = running.length > 0 ? `<div><span class="font-semibold">警上：</span>${running.join(' ')}</div>` : '';
-                const notRunningText = notRunning.length > 0 ? `<div><span class="font-semibold">警下：</span>${notRunning.join(' ')}</div>` : '';
+                
+                const runningText = running.length > 0 ? `<span class="font-semibold">警上：</span>${running.join(' ')}` : '';
+                const notRunningText = notRunning.length > 0 ? `<span class="font-semibold ml-2">警下：</span>${notRunning.join(' ')}` : '';
+                const combinedRunningText = `<div>${runningText}${notRunningText}</div>`;
+
                 const votesByCandidate = {};
                 notRunning.forEach(voterId => {
                     const votedFor = votes[voterId];
@@ -322,7 +325,7 @@
                     votesText += voteStrings.join('； ');
                     votesText += '</div>';
                 }
-                sheriffDisplay.innerHTML = runningText + notRunningText + votesText;
+                sheriffDisplay.innerHTML = combinedRunningText + votesText;
             }
 
             function renderTieBreakerInfo() {
